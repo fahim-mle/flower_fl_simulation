@@ -22,6 +22,7 @@ wheels/
 MANIFEST
 
 # Virtual environments
+.fl_venv/
 .venv/
 venv/
 env/
