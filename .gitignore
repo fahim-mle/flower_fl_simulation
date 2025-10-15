@@ -39,3 +39,6 @@ Thumbs.db
 
 # Flower specific
 fl_simulation_app/__pycache__/
+
+# AI Agents
+.claude
