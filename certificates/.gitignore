@@ -1,0 +1,18 @@
+# Ignore all certificate files (sensitive!)
+*.crt
+*.key
+*.csr
+*.pem
+*.p12
+*.pfx
+*.jks
+
+# Ignore certificate authority private data
+ca/*.key
+ca/private/
+ca/index*
+ca/serial*
+
+# But keep directory structure
+!.gitkeep
+!README.md
