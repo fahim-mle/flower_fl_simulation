@@ -16,6 +16,7 @@ The basic Flower Federated Learning Docker infrastructure has been successfully 
 ## Docker Infrastructure Status ✅
 
 ### Docker Network
+
 ```bash
 Network: flwr-network
 Type: bridge
@@ -50,12 +51,15 @@ Status: Active
 ## Setup Steps Completed ✅
 
 ### 1. Docker Network Creation ✅
+
 ```bash
 docker network create --driver bridge flwr-network
 ```
+
 **Status:** Network exists and active
 
 ### 2. SuperLink Container ✅
+
 ```bash
 docker run --rm \
     -p 9091:9091 -p 9092:9092 -p 9093:9093 \
@@ -66,9 +70,11 @@ docker run --rm \
     --insecure \
     --isolation process
 ```
+
 **Status:** Running for 23 hours
 
 ### 3. SuperNode Containers ✅
+
 ```bash
 # SuperNode 1
 docker run --rm \
@@ -96,9 +102,11 @@ docker run --rm \
     --clientappio-api-address 0.0.0.0:9095 \
     --isolation process
 ```
+
 **Status:** Both running for 23 hours
 
 ### 4. SuperExec Dockerfile ✅
+
 **File:** `quickstart-docker/superexec.Dockerfile`
 
 ```dockerfile
@@ -112,15 +120,19 @@ RUN sed -i 's/.*flwr\[simulation\].*//' pyproject.toml \
 
 ENTRYPOINT ["flower-superexec"]
 ```
+
 **Status:** Dockerfile created and image built
 
 ### 5. SuperExec Image Build ✅
+
 ```bash
 docker build -f superexec.Dockerfile -t flwr_superexec:0.0.1 .
 ```
+
 **Status:** Image built successfully (6.29GB)
 
 ### 6. SuperExec Containers ✅
+
 ```bash
 # ServerApp Executor
 docker run --rm \
@@ -152,31 +164,38 @@ docker run --rm \
     --plugin-type clientapp \
     --appio-api-address supernode-2:9095
 ```
+
 **Status:** All 3 executors running
 
 ### 7. Configuration Files ✅
 
 #### quickstart-docker/pyproject.toml
+
 ```toml
 [tool.flwr.federations.local-deployment]
 address = "127.0.0.1:9093"
 insecure = true
 ```
+
 **Status:** Configured for local deployment
 
 #### fl-simulation-app/pyproject.toml
+
 ```toml
 [tool.flwr.federations.local-deployment]
 address = "127.0.0.1:9093"
 insecure = true
 ```
+
 **Status:** Configured for local deployment
 
 ### 8. Federated Learning Execution ✅
+
 ```bash
 cd quickstart-docker
 flwr run . local-deployment --stream
 ```
+
 **Status:** Can execute FL workflows successfully
 
 ---
@@ -233,6 +252,7 @@ flwr run . local-deployment --stream
 ## Current Configuration
 
 ### Insecure Mode (Current)
+
 - ❌ No TLS/SSL encryption
 - ❌ No certificate validation
 - ❌ No mutual authentication
@@ -240,6 +260,7 @@ flwr run . local-deployment --stream
 - ⚠️ **NOT production-ready**
 
 ### Communication Flow
+
 1. **Host** → SuperLink Control API (127.0.0.1:9093) - Unencrypted
 2. **SuperExec ServerApp** → SuperLink ServerAppIO API (superlink:9091) - Unencrypted
 3. **SuperNodes** → SuperLink Fleet API (superlink:9092) - Unencrypted
@@ -250,6 +271,7 @@ flwr run . local-deployment --stream
 ## Testing & Validation ✅
 
 ### Container Health Checks
+
 ```bash
 # All containers running
 docker ps --format "table {{.Names}}\t{{.Status}}"
@@ -264,6 +286,7 @@ docker ps --format "table {{.Names}}\t{{.Status}}"
 ```
 
 ### Network Connectivity
+
 ```bash
 # Container name resolution works (flwr-network feature)
 docker exec supernode-1 ping -c 1 superlink    # ✅ Success
@@ -271,6 +294,7 @@ docker exec supernode-2 ping -c 1 superlink    # ✅ Success
 ```
 
 ### FL Workflow Execution
+
 ```bash
 cd quickstart-docker
 flwr run . local-deployment --stream    # ✅ Success
@@ -314,28 +338,33 @@ flower_fl_simulation/
 ## Cleanup Commands (If Needed)
 
 ### Stop All Containers
+
 ```bash
 docker stop superexec-clientapp-2 superexec-clientapp-1 superexec-serverapp \
     supernode-2 supernode-1 superlink
 ```
 
 ### Remove All Containers (they use --rm so auto-removed on stop)
+
 ```bash
 # Containers will auto-remove due to --rm flag
 ```
 
 ### Rebuild SuperExec Image (if code changes)
+
 ```bash
 cd quickstart-docker
 docker build -f superexec.Dockerfile -t flwr_superexec:0.0.1 .
 ```
 
 ### Restart All Containers
+
 ```bash
 # Run the docker run commands from "Setup Steps Completed" section above
 ```
 
 ### Remove Network (cleanup)
+
 ```bash
 docker network rm flwr-network
 ```
@@ -361,9 +390,11 @@ docker network rm flwr-network
 ## Week 4 Preparation (Next Steps)
 
 ### Current Status: Ready for TLS Implementation
+
 The Docker infrastructure is stable and ready for security enhancements.
 
 ### Week 4 Tasks (Security Foundations)
+
 1. **Install EasyRSA**
    - Set up Certificate Authority
    - Initialize PKI
@@ -385,6 +416,7 @@ The Docker infrastructure is stable and ready for security enhancements.
    - Validate certificate chains
 
 ### Required Changes for TLS
+
 ```bash
 # SuperLink (will need certificate mounts)
 docker run --rm \
@@ -403,6 +435,7 @@ docker run --rm \
 ```
 
 ### Directory Structure to Create
+
 ```
 certificates/
 ├── ca/
@@ -424,17 +457,20 @@ certificates/
 ## Performance Notes
 
 ### Container Resource Usage
+
 - SuperLink: Lightweight (239MB image)
 - SuperNodes: Lightweight (239MB image each)
 - SuperExec: Heavy (6.29GB image) - includes PyTorch, datasets
 
 ### Startup Time
+
 - Network: Instant
 - SuperLink: ~2 seconds
 - SuperNodes: ~2 seconds each
 - SuperExec: ~5 seconds each
 
 ### Network Latency
+
 - Container-to-container: <1ms (same host)
 - Host-to-container: <1ms (localhost)
 
@@ -443,6 +479,7 @@ certificates/
 ## Known Issues & Limitations
 
 ### Current Limitations
+
 1. **No Security:** Running in insecure mode (by design for Week 3)
 2. **Single Host:** All containers on one machine (local testing)
 3. **No Persistence:** SuperLink state not persisted
@@ -450,6 +487,7 @@ certificates/
 5. **No VPN:** Direct Docker network communication
 
 ### These are Expected
+
 All limitations above are expected for Week 3 and will be addressed in Weeks 4-7.
 
 ---
@@ -470,8 +508,8 @@ All limitations above are expected for Week 3 and will be addressed in Weeks 4-7
 ## References
 
 - **Flower Docker Quickstart:** `docs/guides/flower_quickstart_docker.md`
-- **Flower Documentation:** https://flower.ai/docs/
-- **Docker Network Docs:** https://docs.docker.com/network/
+- **Flower Documentation:** <https://flower.ai/docs/>
+- **Docker Network Docs:** <https://docs.docker.com/network/>
 - **Project Plan:** `docs/planning/01413.5_FL_Internship_Plan_10_Weeks (1).txt`
 
 ---
@@ -480,6 +518,7 @@ All limitations above are expected for Week 3 and will be addressed in Weeks 4-7
 
 **Branch:** `feature/enable-tls-superlink-supernodes`
 **Changes:**
+
 - Added local-deployment federation to pyproject.toml
 - Verified Docker infrastructure
 - Documented complete setup

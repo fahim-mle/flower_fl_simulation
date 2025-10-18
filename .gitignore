@@ -42,3 +42,6 @@ fl_simulation_app/__pycache__/
 
 # AI Agents
 .claude
+
+# References
+_temp/

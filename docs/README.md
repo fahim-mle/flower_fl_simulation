@@ -2,6 +2,17 @@
 
 This directory contains all documentation for the Flower Federated Learning Infrastructure Evaluation project.
 
+## Quick Navigation
+
+### Start Here
+1. **[Folder Architecture Guide](FOLDER_ARCHITECTURE.md)** - Complete project structure and file placement guide (773 lines)
+2. **[Quick Reference](QUICK_REFERENCE.md)** - Cheat sheet for common developer tasks
+3. **[Project Tree Diagram](PROJECT_TREE.txt)** - Visual directory structure
+
+### Essential Information
+- **[Project Status Summary](project-status/PROJECT_STATUS_SUMMARY.md)** - Current project status and progress
+- **[Docker Setup](setup/DOCKER_SETUP_COMPLETE.md)** - Infrastructure setup and configuration
+
 ## Directory Structure
 
 ### `/project-status/`
