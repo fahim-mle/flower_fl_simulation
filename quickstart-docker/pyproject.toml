@@ -46,12 +46,20 @@ default = "local-simulation"
 [tool.flwr.federations.local-simulation]
 options.num-supernodes = 10
 
-# Local deployment federation (Docker containers) - TLS enabled
+# Local deployment federation (Docker containers) - TLS/mTLS enabled
 [tool.flwr.federations.local-deployment]
 address = "127.0.0.1:9093"
+insecure = false
 root-certificates = "../certificates/ca/ca.crt"
+
+# Docker deployment federation - For use within containers
+[tool.flwr.federations.docker-deployment]
+address = "superlink:9093"
+insecure = false
+root-certificates = "/app/certificates/ca/ca.crt"
 
 # Remote federation example for use with SuperLink
 [tool.flwr.federations.remote-federation]
 address = "<SUPERLINK-ADDRESS>:<PORT>"
+insecure = false
 root-certificates = "../certificates/ca/ca.crt"
