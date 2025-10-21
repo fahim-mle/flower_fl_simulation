@@ -1,0 +1,272 @@
+services:
+  # SuperLink - The central server for federated learning
+  superlink:
+    build:
+      context: .
+      dockerfile: superlink.Dockerfile
+    container_name: flower-superlink
+    hostname: superlink
+    networks:
+      - flower-fl-network
+    ports:
+      - "9092:9092" # Fleet API - SuperNode connections
+      - "9093:9093" # Other services
+    volumes:
+      # Mount CA certificate (read-only)
+      - ../certificates/ca/ca.crt:/app/certificates/ca/ca.crt:ro
+      # Mount server certificates (read-only)
+      - ../certificates/server/server.crt:/app/certificates/server/server.crt:ro
+      - ../certificates/server/server.key:/app/certificates/server/server.key:ro
+      # Persist SuperLink state and logs
+      - superlink-data:/app/data
+      - superlink-logs:/app/logs
+    command:
+      - --ssl-ca-certfile=/app/certificates/ca/ca.crt
+      - --ssl-certfile=/app/certificates/server/server.crt
+      - --ssl-keyfile=/app/certificates/server/server.key
+    deploy:
+      resources:
+        limits:
+          cpus: "2.0"
+          memory: 2G
+        reservations:
+          cpus: "0.5"
+          memory: 512M
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "pgrep", "-f", "flower-superlink"]
+      interval: 30s
+      timeout: 10s
+      retries: 2
+      start_period: 40s
+
+  # SuperExec for ServerApp - Executes server-side aggregation logic
+  superexec-serverapp:
+    build:
+      context: .
+      dockerfile: superexec.Dockerfile
+    container_name: flower-superexec-serverapp
+    hostname: superexec-serverapp
+    networks:
+      - flower-fl-network
+    volumes:
+      # Mount CA certificate (read-only)
+      - ../certificates/ca/ca.crt:/app/certificates/ca/ca.crt:ro
+      # Mount application code
+      - ./quickstart_docker:/app/quickstart_docker:ro
+      # Persist model outputs
+      - model-outputs:/app/outputs
+    environment:
+      - PYTHONUNBUFFERED=1
+      - SSL_CERT_FILE=/app/certificates/ca/ca.crt
+      - REQUESTS_CA_BUNDLE=/app/certificates/ca/ca.crt
+    depends_on:
+      superlink:
+        condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          cpus: "2.0"
+          memory: 2G
+        reservations:
+          cpus: "1.0"
+          memory: 512M
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "pgrep", "-f", "flower-superexec"]
+      interval: 30s
+      timeout: 10s
+      retries: 2
+      start_period: 20s
+    command:
+      - --plugin-type=serverapp
+      - --appio-api-address=superlink:9091
+
+  # SuperExec for ClientApp 1 - Executes client training logic for SuperNode-1
+  superexec-clientapp-1:
+    build:
+      context: .
+      dockerfile: superexec.Dockerfile
+    container_name: flower-superexec-clientapp-1
+    hostname: superexec-clientapp-1
+    networks:
+      - flower-fl-network
+    volumes:
+      # Mount CA certificate (read-only)
+      - ../certificates/ca/ca.crt:/app/certificates/ca/ca.crt:ro
+      # Mount application code
+      - ./quickstart_docker:/app/quickstart_docker:ro
+    environment:
+      - PYTHONUNBUFFERED=1
+      - SSL_CERT_FILE=/app/certificates/ca/ca.crt
+      - REQUESTS_CA_BUNDLE=/app/certificates/ca/ca.crt
+    depends_on:
+      superlink:
+        condition: service_healthy
+      supernode-1:
+        condition: service_started
+    deploy:
+      resources:
+        limits:
+          cpus: "2.0"
+          memory: 2G
+        reservations:
+          cpus: "0.5"
+          memory: 512M
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "pgrep", "-f", "flower-superexec"]
+      interval: 30s
+      timeout: 10s
+      retries: 2
+      start_period: 20s
+    command:
+      - --plugin-type=clientapp
+      - --appio-api-address=supernode-1:9094
+
+  # SuperExec for ClientApp 2 - Executes client training logic for SuperNode-2
+  superexec-clientapp-2:
+    build:
+      context: .
+      dockerfile: superexec.Dockerfile
+    container_name: flower-superexec-clientapp-2
+    hostname: superexec-clientapp-2
+    networks:
+      - flower-fl-network
+    volumes:
+      # Mount CA certificate (read-only)
+      - ../certificates/ca/ca.crt:/app/certificates/ca/ca.crt:ro
+      # Mount application code
+      - ./quickstart_docker:/app/quickstart_docker:ro
+    environment:
+      - PYTHONUNBUFFERED=1
+      - SSL_CERT_FILE=/app/certificates/ca/ca.crt
+      - REQUESTS_CA_BUNDLE=/app/certificates/ca/ca.crt
+    depends_on:
+      superlink:
+        condition: service_healthy
+      supernode-2:
+        condition: service_started
+    deploy:
+      resources:
+        limits:
+          cpus: "2.0"
+          memory: 2G
+        reservations:
+          cpus: "0.5"
+          memory: 512M
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "pgrep", "-f", "flower-superexec"]
+      interval: 30s
+      timeout: 10s
+      retries: 2
+      start_period: 20s
+    command:
+      - --plugin-type=clientapp
+      - --appio-api-address=supernode-2:9095
+
+  # SuperNode 1 - First federated learning client
+  supernode-1:
+    build:
+      context: .
+      dockerfile: supernode.Dockerfile
+    container_name: flower-supernode-1
+    hostname: supernode-1
+    networks:
+      - flower-fl-network
+    volumes:
+      # Mount CA certificate for TLS verification (read-only)
+      - ../certificates/ca/ca.crt:/app/certificates/ca/ca.crt:ro
+      # Mount application code
+      - ./quickstart_docker:/app/quickstart_docker:ro
+      # Persist client data and cache
+      - supernode1-data:/app/data
+      - supernode1-cache:/app/.cache
+    environment:
+      - PYTHONUNBUFFERED=1
+    depends_on:
+      superlink:
+        condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          cpus: "2.0"
+          memory: 4G
+        reservations:
+          cpus: "0.5"
+          memory: 1G
+    restart: unless-stopped
+    command:
+      - --root-certificates=/app/certificates/ca/ca.crt
+      - --superlink=superlink:9092
+      - --clientappio-api-address=0.0.0.0:9094
+      - --node-config=partition-id=0 num-partitions=2
+
+  # SuperNode 2 - Second federated learning client
+  supernode-2:
+    build:
+      context: .
+      dockerfile: supernode.Dockerfile
+    container_name: flower-supernode-2
+    hostname: supernode-2
+    networks:
+      - flower-fl-network
+    volumes:
+      # Mount CA certificate for TLS verification (read-only)
+      - ../certificates/ca/ca.crt:/app/certificates/ca/ca.crt:ro
+      # Mount application code
+      - ./quickstart_docker:/app/quickstart_docker:ro
+      # Persist client data and cache
+      - supernode2-data:/app/data
+      - supernode2-cache:/app/.cache
+    environment:
+      - PYTHONUNBUFFERED=1
+    depends_on:
+      superlink:
+        condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          cpus: "2.0"
+          memory: 4G
+        reservations:
+          cpus: "0.5"
+          memory: 1G
+    restart: unless-stopped
+    command:
+      - --root-certificates=/app/certificates/ca/ca.crt
+      - --superlink=superlink:9092
+      - --clientappio-api-address=0.0.0.0:9095
+      - --node-config=partition-id=1 num-partitions=2
+
+networks:
+  flower-fl-network:
+    name: flower-fl-network
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.28.0.0/16
+
+volumes:
+  # SuperLink volumes
+  superlink-data:
+    name: flower-superlink-data
+  superlink-logs:
+    name: flower-superlink-logs
+
+  # SuperExec volumes
+  model-outputs:
+    name: flower-model-outputs
+
+  # SuperNode 1 volumes
+  supernode1-data:
+    name: flower-supernode1-data
+  supernode1-cache:
+    name: flower-supernode1-cache
+
+  # SuperNode 2 volumes
+  supernode2-data:
+    name: flower-supernode2-data
+  supernode2-cache:
+    name: flower-supernode2-cache

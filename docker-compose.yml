@@ -1,0 +1,171 @@
+services:
+  superlink:
+    image: flwr/superlink:1.22.0
+    container_name: flower-superlink
+    hostname: superlink
+    networks:
+      - flower-fl-network
+    ports:
+      - "9091:9091"  # ServerAppIO API
+      - "9092:9092"  # Fleet API - SuperNode connections
+      - "9093:9093"  # Control API
+    volumes:
+      - ./certificates:/certificates:ro
+    command:
+      - --ssl-ca-certfile=/certificates/ca/ca.crt
+      - --ssl-certfile=/certificates/server/server.crt
+      - --ssl-keyfile=/certificates/server/server.key
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "pgrep", "-f", "flower-superlink"]
+      interval: 30s
+      timeout: 10s
+      retries: 2
+      start_period: 40s
+
+  # SuperExec for ServerApp - Executes server-side aggregation logic
+  superexec-serverapp:
+    image: flwr/superexec:1.22.0
+    container_name: flower-superexec-serverapp
+    hostname: superexec-serverapp
+    networks:
+      - flower-fl-network
+    volumes:
+      - ./certificates:/certificates:ro
+      - ./quickstart-docker:/app
+    environment:
+      - PYTHONUNBUFFERED=1
+      - SSL_CERT_FILE=/certificates/ca/ca.crt
+      - REQUESTS_CA_BUNDLE=/certificates/ca/ca.crt
+    command:
+      - --plugin-type=serverapp
+      - --appio-api-address=superlink:9091
+    depends_on:
+      superlink:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "pgrep", "-f", "flower-superexec"]
+      interval: 30s
+      timeout: 10s
+      retries: 2
+      start_period: 20s
+
+  # SuperExec for ClientApp 1 - Executes client training logic for SuperNode-1
+  superexec-clientapp-1:
+    image: flwr/superexec:1.22.0
+    container_name: flower-superexec-clientapp-1
+    hostname: superexec-clientapp-1
+    networks:
+      - flower-fl-network
+    volumes:
+      - ./certificates:/certificates:ro
+      - ./quickstart-docker:/app
+    environment:
+      - PYTHONUNBUFFERED=1
+      - SSL_CERT_FILE=/certificates/ca/ca.crt
+      - REQUESTS_CA_BUNDLE=/certificates/ca/ca.crt
+    command:
+      - --plugin-type=clientapp
+      - --appio-api-address=supernode-1:9094
+    depends_on:
+      superlink:
+        condition: service_healthy
+      supernode-1:
+        condition: service_started
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "pgrep", "-f", "flower-superexec"]
+      interval: 30s
+      timeout: 10s
+      retries: 2
+      start_period: 20s
+
+  # SuperExec for ClientApp 2 - Executes client training logic for SuperNode-2
+  superexec-clientapp-2:
+    image: flwr/superexec:1.22.0
+    container_name: flower-superexec-clientapp-2
+    hostname: superexec-clientapp-2
+    networks:
+      - flower-fl-network
+    volumes:
+      - ./certificates:/certificates:ro
+      - ./quickstart-docker:/app
+    environment:
+      - PYTHONUNBUFFERED=1
+      - SSL_CERT_FILE=/certificates/ca/ca.crt
+      - REQUESTS_CA_BUNDLE=/certificates/ca/ca.crt
+    command:
+      - --plugin-type=clientapp
+      - --appio-api-address=supernode-2:9095
+    depends_on:
+      superlink:
+        condition: service_healthy
+      supernode-2:
+        condition: service_started
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "pgrep", "-f", "flower-superexec"]
+      interval: 30s
+      timeout: 10s
+      retries: 2
+      start_period: 20s
+
+  supernode-1:
+    image: flwr/supernode:1.22.0
+    container_name: flower-supernode-1
+    hostname: supernode-1
+    networks:
+      - flower-fl-network
+    volumes:
+      - ./certificates:/certificates:ro
+      - ./quickstart-docker:/app
+    environment:
+      - PYTHONUNBUFFERED=1
+    command:
+      - --root-certificates=/certificates/ca/ca.crt
+      - --superlink=superlink:9092
+      - --clientappio-api-address=0.0.0.0:9094
+      - --node-config=partition-id=0 num-partitions=2
+    depends_on:
+      superlink:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "pgrep", "-f", "flower-supernode"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  supernode-2:
+    image: flwr/supernode:1.22.0
+    container_name: flower-supernode-2
+    hostname: supernode-2
+    networks:
+      - flower-fl-network
+    volumes:
+      - ./certificates:/certificates:ro
+      - ./quickstart-docker:/app
+    environment:
+      - PYTHONUNBUFFERED=1
+    command:
+      - --root-certificates=/certificates/ca/ca.crt
+      - --superlink=superlink:9092
+      - --clientappio-api-address=0.0.0.0:9095
+      - --node-config=partition-id=1 num-partitions=2
+    depends_on:
+      superlink:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "pgrep", "-f", "flower-supernode"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+networks:
+  flower-fl-network:
+    name: flower-fl-network
+    driver: bridge

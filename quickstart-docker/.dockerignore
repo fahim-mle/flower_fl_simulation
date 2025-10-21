@@ -1,0 +1,68 @@
+# Python cache and compiled files
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Virtual environments
+venv/
+env/
+ENV/
+.venv
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Git
+.git/
+.gitignore
+
+# Documentation
+README.md
+*.md
+docs/
+
+# Certificates (mounted separately)
+certificates/
+
+# Docker files (not needed in image)
+docker-compose*.yml
+*.Dockerfile
+Dockerfile
+
+# Model outputs and logs
+*.pt
+*.pth
+*.h5
+*.pkl
+outputs/
+logs/
+*.log
+
+# Test and development files
+tests/
+test_*.py
+*_test.py
+.pytest_cache/
+
+# Build artifacts
+build/
+dist/
+*.egg-info/
+
+# Jupyter notebooks
+*.ipynb
+.ipynb_checkpoints/
+
+# Data files (should be downloaded in container if needed)
+data/
+datasets/
+*.csv
+*.json
+*.xml
