@@ -16,7 +16,7 @@ This document provides a comprehensive overview of the Flower Federated Learning
 
 The Flower Federated Learning Infrastructure Evaluation project is a comprehensive federated learning implementation built on the Flower framework. It includes multiple applications, monitoring infrastructure, security certificates, configuration management, and extensive documentation.
 
-**Project Root:** `/home/ghost/workspace/internship_project/flower_fl_simulation/`
+**Project Root:** `repository root`
 
 ---
 
@@ -235,7 +235,7 @@ docs/
 
 **Purpose:** Primary federated learning application demonstrating Flower framework capabilities with PyTorch.
 
-**Location:** `/home/ghost/workspace/internship_project/flower_fl_simulation/fl-simulation-app/`
+**Location:** `root project directory`
 
 **Structure:**
 ```

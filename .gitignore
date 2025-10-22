@@ -47,6 +47,5 @@ fl_simulation_app/__pycache__/
 _temp/
 
 # Certificates
-certficates/
-.crt
-.key
+certificates/
+*.pem
