@@ -39,3 +39,9 @@ Thumbs.db
 
 # Flower specific
 fl_simulation_app/__pycache__/
+
+# Certificates
+/certificates
+
+/.claude
+/_temp
