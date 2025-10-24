@@ -1,0 +1,171 @@
+Flower Federated Learning Infrastructure Project Structure
+===========================================================
+
+flower_fl_simulation/                              # Root project directory
+│
+├── .claude/                                       # AI agent configurations
+│   └── agents/                                    # Agent definitions
+│       ├── claude.md
+│       ├── devops.md
+│       ├── docs.md
+│       ├── docker-expert.md
+│       ├── fl-expert.md
+│       ├── project-orchestrator.md
+│       └── security.md
+│
+├── .git/                                          # Version control (gitignored)
+│
+├── .gitignore                                     # Git ignore patterns
+│
+├── certificates/                                  # TLS/mTLS certificates
+│   ├── .gitignore                                 # Prevent secret commits
+│   ├── .gitkeep
+│   ├── ca/                                        # Certificate Authority
+│   │   ├── ca.crt
+│   │   └── ca.key
+│   ├── server/                                    # Server certificates
+│   │   ├── server.crt
+│   │   ├── server.csr
+│   │   └── server.key
+│   └── clients/                                   # Client certificates
+│       ├── client1.crt
+│       ├── client1.csr
+│       └── client1.key
+│
+├── configs/                                       # Configuration files
+│   ├── .gitkeep
+│   ├── keycloak/                                  # Authentication config
+│   ├── monitoring/                                # Monitoring config
+│   └── vpn/                                       # VPN config
+│
+├── docs/                                          # All documentation
+│   ├── README.md                                  # Documentation index
+│   ├── FOLDER_ARCHITECTURE.md                     # This guide (you are here!)
+│   ├── PROJECT_TREE.txt                           # Tree diagram
+│   │
+│   ├── architecture/                              # System architecture docs
+│   │   └── .gitkeep
+│   │
+│   ├── concepts/                                  # FL concepts and theory
+│   │   ├── federated_learning_brief.md
+│   │   └── federated_learning_explanation.md
+│   │
+│   ├── guides/                                    # How-to guides and tutorials
+│   │   ├── .gitkeep
+│   │   └── flower_quickstart_docker.md
+│   │
+│   ├── planning/                                  # Project planning docs
+│   │   ├── plan_and_how_to_accomplish_project.md
+│   │   ├── 01413.5_FL_Internship_Plan_10_Weeks.txt
+│   │   └── FL_FLWR_OPS.txt
+│   │
+│   ├── project-status/                            # Current project status
+│   │   ├── PROJECT_STATUS_SUMMARY.md
+│   │   ├── PROJECT_STRUCTURE.md
+│   │   └── TASKS_AND_BRANCHES.md
+│   │
+│   └── setup/                                     # Setup and installation
+│       ├── DOCKER_SETUP_COMPLETE.md
+│       └── certificates-README.md
+│
+├── fl-simulation-app/                             # Main FL application
+│   ├── README.md
+│   ├── pyproject.toml                             # Project config
+│   ├── .gitignore
+│   ├── final_model.pt                             # Trained model
+│   │
+│   ├── fl_simulation_app/                         # Source code
+│   │   ├── __init__.py
+│   │   ├── client_app.py                          # ClientApp definition
+│   │   ├── server_app.py                          # ServerApp definition
+│   │   ├── task.py                                # Task and model logic
+│   │   └── __pycache__/
+│   │
+│   └── goal_and_documentation/                    # App documentation
+│
+├── monitoring/                                    # Monitoring infrastructure
+│   ├── .gitkeep
+│   │
+│   ├── prometheus/                                # Prometheus monitoring
+│   │   └── .gitkeep
+│   │
+│   └── grafana/                                   # Grafana dashboards
+│       ├── .gitkeep
+│       └── dashboards/                            # Dashboard definitions
+│
+├── quickstart-docker/                             # Quick start Docker app
+│   ├── README.md
+│   ├── pyproject.toml
+│   ├── .gitignore
+│   ├── superexec.Dockerfile                       # Container definition
+│   │
+│   └── quickstart_docker/                         # Source code
+│       ├── __init__.py
+│       ├── client_app.py
+│       ├── server_app.py
+│       ├── task.py
+│       └── __pycache__/
+│
+├── scripts/                                       # Automation scripts
+│   ├── .gitkeep
+│   │
+│   ├── deploy/                                    # Deployment scripts
+│   │   └── (Deployment automation)
+│   │
+│   ├── setup/                                     # Setup scripts
+│   │   └── (Setup automation)
+│   │
+│   └── tests/                                     # Test scripts
+│       └── (Test execution)
+│
+├── tests/                                         # Test suites
+│   ├── .gitkeep
+│   │
+│   ├── unit/                                      # Unit tests
+│   │   ├── test_client_app.py
+│   │   ├── test_server_app.py
+│   │   └── test_task.py
+│   │
+│   ├── integration/                               # Integration tests
+│   │   ├── test_fl_workflow.py
+│   │   └── test_docker_setup.py
+│   │
+│   └── security/                                  # Security tests
+│       ├── test_certificate_validation.py
+│       ├── test_mtls_communication.py
+│       └── test_authentication.py
+│
+├── .fl_venv/                                      # Python virtual env (gitignored)
+│   └── (Python packages and dependencies)
+│
+└── final_model.pt                                 # Trained model artifact
+
+
+Key Information
+===============
+
+DEVELOPMENT LOCATIONS:
+  - Source code: fl-simulation-app/fl_simulation_app/ or quickstart-docker/quickstart_docker/
+  - Tests: tests/unit/, tests/integration/, tests/security/
+  - Documentation: docs/ (appropriate subdirectory)
+  - Configuration: configs/
+  - Scripts: scripts/ (appropriate subdirectory)
+  - Certificates: certificates/ (appropriate subdirectory)
+
+GITIGNORE PATTERNS:
+  - __pycache__/ - Python cache
+  - *.pyc - Compiled Python
+  - .fl_venv/ - Virtual environment
+  - .vscode/, .idea/ - IDE files
+  - .DS_Store, Thumbs.db - OS files
+  - Private certificate keys - via certificates/.gitignore
+  - .claude/ - AI agent configs
+
+IMPORTANT NOTES:
+  - NEVER commit private keys (*.key files)
+  - Model artifacts use separate storage
+  - Keep .gitignore updated for secrets
+  - Update docs/README.md when adding documentation
+  - Follow file placement guidelines (see FOLDER_ARCHITECTURE.md)
+
+For full details, see: docs/FOLDER_ARCHITECTURE.md
