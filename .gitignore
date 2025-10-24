@@ -42,6 +42,8 @@ fl_simulation_app/__pycache__/
 
 # Certificates
 /certificates
+/nectar_creds
+/scripts
 
 /.claude
 /_temp
