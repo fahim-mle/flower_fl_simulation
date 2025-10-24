@@ -47,3 +47,5 @@ fl_simulation_app/__pycache__/
 
 /.claude
 /_temp
+
+*.pt
