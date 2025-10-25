@@ -1,11 +1,13 @@
 # Phase 1 Implementation Plan: Project Foundation & Certificate Authority
 
 ## Overview
+
 This plan implements Phase 1 of the Federated Learning Infrastructure, focusing on establishing the foundational project structure, Certificate Authority (CA), and service certificates for secure mTLS communication across all FL components.
 
 **Objective**: Replicate OPS manual PKI in project directory with Docker adaptations
 
 **Key Modifications from OPS Manual**:
+
 - CA location: `./ca/` (project-based) instead of `/usr/share/easy-rsa` (system-wide)
 - Deployment model: Docker containers with volume mounts instead of systemd services
 - Network model: Docker networks with localhost access instead of physical/VPN segmentation
@@ -15,11 +17,13 @@ This plan implements Phase 1 of the Federated Learning Infrastructure, focusing 
 ## Network Configuration Reference
 
 ### IP Ranges (from instruction.md)
+
 - **FL Services Network**: `172.20.0.0/16` - Main services (SuperLink, Keycloak, PostgreSQL, Nginx)
 - **FL Clients Network**: `172.21.0.0/16` - SuperNode clients
 - **FL Monitoring Network**: `172.22.0.0/16` - Monitoring stack (Prometheus, Grafana)
 
 ### Port Allocation (from FL_FLWR_OPS Section 3.3.1)
+
 | Service | Port(s) | Protocol | Purpose |
 |---------|---------|----------|---------|
 | SSH | 22 | TCP | System administration |
@@ -42,11 +46,13 @@ This plan implements Phase 1 of the Federated Learning Infrastructure, focusing 
 ### Tasks
 
 #### 1.1.1 Create Root Project Directory Structure
+
 ```bash
-mkdir -p flower_fl_simulation/{ca,config,volumes,docker,scripts,logs}
+mkdir -p flower_secure_simulation/{ca,config,volumes,docker,scripts,logs}
 ```
 
 #### 1.1.2 Create Certificate Authority Directory
+
 ```bash
 mkdir -p ca/{pki,issued,private,reqs}
 ```
@@ -54,6 +60,7 @@ mkdir -p ca/{pki,issued,private,reqs}
 **Purpose**: Local CA for generating all service and client certificates (OPS 4.1.2.2)
 
 #### 1.1.3 Create Docker Volume Directories
+
 ```bash
 mkdir -p volumes/{postgres,keycloak,jupyterhub,nginx,prometheus,grafana}
 mkdir -p volumes/certificates/{superlink,supernode-{1..5},keycloak,jupyterhub,nginx,postgres}
@@ -62,6 +69,7 @@ mkdir -p volumes/certificates/{superlink,supernode-{1..5},keycloak,jupyterhub,ng
 **Purpose**: Persistent storage and certificate distribution to containers
 
 #### 1.1.4 Create Configuration Directories
+
 ```bash
 mkdir -p config/{nginx,keycloak,jupyterhub,prometheus,grafana,superlink,supernode}
 mkdir -p config/nginx/{sites-available,sites-enabled,ssl}
@@ -70,7 +78,9 @@ mkdir -p config/nginx/{sites-available,sites-enabled,ssl}
 **Purpose**: Service-specific configuration files (OPS 4.1.1)
 
 #### 1.1.5 Create Docker Network Definitions
+
 Create `docker/networks.yml`:
+
 ```yaml
 networks:
   fl-services-network:
@@ -96,6 +106,7 @@ networks:
 ```
 
 #### 1.1.6 Create Directory Structure Documentation
+
 Document the directory layout in `PROJECT_STRUCTURE.md` following OPS 4.1.1 conventions.
 
 ---
@@ -105,6 +116,7 @@ Document the directory layout in `PROJECT_STRUCTURE.md` following OPS 4.1.1 conv
 **Agent Assignment**: `security` (PKI implementation), `docker-expert` (volume mounting strategy)
 
 ### Prerequisites
+
 - Ubuntu 24.04 LTS or compatible Linux distribution
 - OpenSSL installed
 - easy-rsa 3.x package
@@ -112,6 +124,7 @@ Document the directory layout in `PROJECT_STRUCTURE.md` following OPS 4.1.1 conv
 ### Tasks
 
 #### 1.2.1 Install easy-rsa Locally
+
 ```bash
 sudo apt-get update
 sudo apt-get install -y easy-rsa openssl
@@ -120,6 +133,7 @@ sudo apt-get install -y easy-rsa openssl
 **Note**: Install on host system, NOT in containers (OPS 4.1.2.2)
 
 #### 1.2.2 Initialize PKI in Project Directory
+
 ```bash
 cd ./ca
 cp -r /usr/share/easy-rsa/* .
@@ -129,7 +143,9 @@ cp -r /usr/share/easy-rsa/* .
 **Output**: Creates `pki/` directory structure for certificate management
 
 #### 1.2.3 Configure CA Variables
+
 Create `./ca/pki/vars` with organization details:
+
 ```bash
 cat > ./ca/pki/vars << 'EOF'
 set_var EASYRSA_REQ_COUNTRY    "AU"
@@ -148,25 +164,30 @@ EOF
 **Security Note**: 4096-bit keys and SHA-512 for production-grade security (OPS 4.1.2.2)
 
 #### 1.2.4 Build Certificate Authority
+
 ```bash
 cd ./ca
 ./easyrsa build-ca nopass
 ```
 
 **Interactive Prompts**:
+
 - Common Name: `Federated Learning Root CA`
 
 **Output Files**:
+
 - `pki/ca.crt` - CA certificate (distribute to all services)
 - `pki/private/ca.key` - CA private key (NEVER distribute, secure this file)
 
 #### 1.2.5 Secure CA Private Key
+
 ```bash
 chmod 600 ./ca/pki/private/ca.key
 chmod 644 ./ca/pki/ca.crt
 ```
 
 #### 1.2.6 Distribute CA Certificate to Volume Mounts
+
 ```bash
 for dir in volumes/certificates/*/; do
     cp ./ca/pki/ca.crt "$dir/ca.crt"
@@ -182,6 +203,7 @@ done
 **Agent Assignment**: `security` (certificate generation), `fl-expert` (Flower-specific certs), `docker-expert` (DNS/SAN configuration)
 
 ### Certificate Strategy
+
 - **Subject Alternative Names (SANs)**: Docker service names + localhost + IP addresses
 - **Certificate Types**:
   - Server certificates for services (SuperLink, Keycloak, PostgreSQL, Nginx, JupyterHub)
@@ -191,7 +213,9 @@ done
 ### Tasks
 
 #### 1.3.1 Create Certificate Generation Script
+
 Create `./scripts/generate_service_cert.sh`:
+
 ```bash
 #!/bin/bash
 # Usage: ./generate_service_cert.sh <service-name> <san-entries>
@@ -218,11 +242,13 @@ echo "Certificate generated for $SERVICE_NAME"
 ```
 
 Make executable:
+
 ```bash
 chmod +x ./scripts/generate_service_cert.sh
 ```
 
 #### 1.3.2 Generate SuperLink Certificate (OPS 4.1.2.16)
+
 ```bash
 ./scripts/generate_service_cert.sh superlink \
     "DNS:superlink,DNS:superlink.fl-lab.local,DNS:localhost,IP:127.0.0.1,IP:172.20.0.10"
@@ -231,6 +257,7 @@ chmod +x ./scripts/generate_service_cert.sh
 **Purpose**: FL coordination service on ports 9091-9093
 
 #### 1.3.3 Generate PostgreSQL Certificate (OPS 4.1.2.8)
+
 ```bash
 ./scripts/generate_service_cert.sh postgres \
     "DNS:postgres,DNS:postgres.fl-lab.local,DNS:localhost,IP:127.0.0.1,IP:172.20.0.5"
@@ -239,6 +266,7 @@ chmod +x ./scripts/generate_service_cert.sh
 **Purpose**: Database backend with SSL connections
 
 #### 1.3.4 Generate Keycloak Certificate (OPS 4.1.2.9)
+
 ```bash
 ./scripts/generate_service_cert.sh keycloak \
     "DNS:keycloak,DNS:keycloak.fl-lab.local,DNS:localhost,IP:127.0.0.1,IP:172.20.0.6"
@@ -247,6 +275,7 @@ chmod +x ./scripts/generate_service_cert.sh
 **Purpose**: Identity and Access Management on port 8443
 
 #### 1.3.5 Generate JupyterHub Certificate (OPS 4.1.2.13)
+
 ```bash
 ./scripts/generate_service_cert.sh jupyterhub \
     "DNS:jupyterhub,DNS:jupyterhub.fl-lab.local,DNS:localhost,IP:127.0.0.1,IP:172.20.0.7"
@@ -255,6 +284,7 @@ chmod +x ./scripts/generate_service_cert.sh
 **Purpose**: User interface on port 8000 (internal)
 
 #### 1.3.6 Generate Nginx Certificate (OPS 4.1.2.5)
+
 ```bash
 ./scripts/generate_service_cert.sh nginx \
     "DNS:nginx,DNS:nginx.fl-lab.local,DNS:localhost,IP:127.0.0.1,IP:172.20.0.4"
@@ -263,6 +293,7 @@ chmod +x ./scripts/generate_service_cert.sh
 **Purpose**: Reverse proxy SSL termination on port 443
 
 #### 1.3.7 Generate SuperNode Client Certificates (OPS 4.1.3, Appendix 5.7)
+
 ```bash
 # Organization 1
 mkdir -p volumes/certificates/supernode-1
@@ -293,7 +324,9 @@ mkdir -p volumes/certificates/supernode-5
 **Purpose**: Client authentication for FL training nodes (5 organizations)
 
 #### 1.3.8 Verify Certificate Generation
+
 Create verification script `./scripts/verify_certificates.sh`:
+
 ```bash
 #!/bin/bash
 # Verify all certificates are properly generated
@@ -340,6 +373,7 @@ openssl x509 -text -noout -in ./ca/pki/ca.crt | grep -E "(Subject:|Issuer:|Not B
 ```
 
 Make executable and run:
+
 ```bash
 chmod +x ./scripts/verify_certificates.sh
 ./scripts/verify_certificates.sh
@@ -350,6 +384,7 @@ chmod +x ./scripts/verify_certificates.sh
 ## Phase 1 Validation Checklist
 
 ### 1.1 Project Structure ✓
+
 - [ ] Root directory structure created
 - [ ] `./ca/` directory initialized
 - [ ] Docker volume directories created for all services
@@ -358,6 +393,7 @@ chmod +x ./scripts/verify_certificates.sh
 - [ ] Directory structure documented
 
 ### 1.2 Certificate Authority ✓
+
 - [ ] easy-rsa installed locally
 - [ ] PKI initialized in `./ca/`
 - [ ] CA variables configured with organization details
@@ -366,6 +402,7 @@ chmod +x ./scripts/verify_certificates.sh
 - [ ] CA certificate distributed to all service volumes
 
 ### 1.3 Service Certificates ✓
+
 - [ ] Certificate generation script created and tested
 - [ ] SuperLink certificate generated with correct SANs
 - [ ] PostgreSQL certificate generated
@@ -381,8 +418,9 @@ chmod +x ./scripts/verify_certificates.sh
 ## Expected Outputs After Phase 1
 
 ### Directory Structure
+
 ```
-flower_fl_simulation/
+flower_secure_simulation/
 ├── ca/
 │   ├── easyrsa
 │   └── pki/
@@ -426,6 +464,7 @@ flower_fl_simulation/
 ```
 
 ### Certificate Inventory
+
 - **1 Root CA Certificate**: For signing all service/client certificates
 - **6 Service Certificates**: superlink, postgres, keycloak, jupyterhub, nginx, and 5 supernode client certificates
 - **All certificates**: Include proper SANs for Docker DNS, localhost, and IP addresses
@@ -435,14 +474,17 @@ flower_fl_simulation/
 ## Agent Execution Plan
 
 ### Phase 1.1: Project Structure
+
 1. **devops agent**: Create directory structure and network definitions
 2. **docker-expert agent**: Configure volume mount strategy and permissions
 
 ### Phase 1.2: Certificate Authority
+
 1. **security agent**: Install easy-rsa, initialize PKI, generate root CA
 2. **devops agent**: Distribute CA certificate to volume mounts
 
 ### Phase 1.3: Service Certificates
+
 1. **security agent**: Create certificate generation scripts and generate all service certificates
 2. **fl-expert agent**: Review Flower-specific certificate requirements (SuperLink, SuperNode)
 3. **docker-expert agent**: Verify SAN entries match Docker DNS configuration
@@ -452,6 +494,7 @@ flower_fl_simulation/
 ## Next Steps (Phase 2 Preview)
 
 After Phase 1 completion, Phase 2 will focus on:
+
 - Creating Docker networks with IP segmentation
 - Configuring `/etc/hosts` for local domain resolution
 - Setting up localhost-only port binding
@@ -488,15 +531,19 @@ After Phase 1 completion, Phase 2 will focus on:
 ## Troubleshooting
 
 ### Issue: easy-rsa not found
+
 **Solution**: Install package `sudo apt-get install easy-rsa`
 
 ### Issue: Permission denied on ca.key
+
 **Solution**: Ensure proper ownership and 600 permissions `chmod 600 ca/pki/private/ca.key`
 
 ### Issue: Certificate SAN verification fails
+
 **Solution**: Regenerate certificate with correct `--subject-alt-name` parameter
 
 ### Issue: Docker containers can't access certificates
+
 **Solution**: Verify volume mount paths in docker-compose.yml match certificate locations
 
 ---
