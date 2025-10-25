@@ -78,3 +78,5 @@ flower_secure_simulation/ca/pki/serial*
 flower_secure_simulation/ca/pki/openssl-easyrsa.cnf
 flower_secure_simulation/ca/pki/inline/
 flower_secure_simulation/ca/pki/revoked/
+
+flower_secure_simulation/ca
