@@ -49,3 +49,32 @@ fl_simulation_app/__pycache__/
 /_temp
 
 *.pt
+
+# PKI Security - Federated Learning Infrastructure
+# Never commit private keys or sensitive PKI materials
+flower_secure_simulation/ca/pki/private/
+flower_secure_simulation/ca/pki/issued/*.key
+flower_secure_simulation/volumes/certificates/*/*.key
+*.key
+*.csr
+*.req
+flower_secure_simulation/ca/pki/reqs/
+flower_secure_simulation/ca/pki/renewed/
+
+# Volume data (exclude persistent storage)
+flower_secure_simulation/volumes/postgres/
+flower_secure_simulation/volumes/keycloak/
+flower_secure_simulation/volumes/jupyterhub/
+flower_secure_simulation/volumes/nginx/
+flower_secure_simulation/volumes/prometheus/
+flower_secure_simulation/volumes/grafana/
+
+# Logs (exclude runtime logs)
+flower_secure_simulation/logs/
+
+# CA database files (exclude generated index and serial tracking)
+flower_secure_simulation/ca/pki/index.txt*
+flower_secure_simulation/ca/pki/serial*
+flower_secure_simulation/ca/pki/openssl-easyrsa.cnf
+flower_secure_simulation/ca/pki/inline/
+flower_secure_simulation/ca/pki/revoked/
