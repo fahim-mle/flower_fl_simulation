@@ -1,0 +1,10 @@
+set_var EASYRSA_REQ_COUNTRY    "AU"
+set_var EASYRSA_REQ_PROVINCE   "Queensland"
+set_var EASYRSA_REQ_CITY       "Brisbane"
+set_var EASYRSA_REQ_ORG        "Federated Learning Lab"
+set_var EASYRSA_REQ_EMAIL      "admin@fl-lab.local"
+set_var EASYRSA_REQ_OU         "FL Infrastructure"
+set_var EASYRSA_KEY_SIZE       4096
+set_var EASYRSA_CA_EXPIRE      3650
+set_var EASYRSA_CERT_EXPIRE    825
+set_var EASYRSA_DIGEST         "sha512"
