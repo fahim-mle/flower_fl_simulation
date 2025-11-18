@@ -13,11 +13,13 @@ These scripts automate the certificate generation and validation process for all
 **Purpose**: Generate individual service certificates with Subject Alternative Names (SANs)
 
 **Usage**:
+
 ```bash
 ./generate_service_cert.sh <service-name> <san-entries>
 ```
 
 **Examples**:
+
 ```bash
 # Generate certificate for SuperLink
 ./generate_service_cert.sh superlink "DNS:superlink,DNS:superlink.fl-lab.local,IP:127.0.0.1,IP:172.20.0.10"
@@ -27,6 +29,7 @@ These scripts automate the certificate generation and validation process for all
 ```
 
 **Features**:
+
 - Comprehensive input validation
 - Automatic prerequisite checking (CA existence, directories)
 - Support for certificate regeneration with revocation
@@ -36,6 +39,7 @@ These scripts automate the certificate generation and validation process for all
 - Detailed error messages and logging
 
 **Output Files** (per service):
+
 - `../volumes/certificates/<service>/<service>.crt` - Service certificate
 - `../volumes/certificates/<service>/<service>.key` - Private key (600 permissions)
 - `../volumes/certificates/<service>/ca.crt` - CA certificate
@@ -47,11 +51,13 @@ These scripts automate the certificate generation and validation process for all
 **Purpose**: Comprehensive verification of all service certificates
 
 **Usage**:
+
 ```bash
 ./verify_certificates.sh
 ```
 
 **Checks Performed**:
+
 - Certificate file existence
 - Private key file existence
 - CA certificate existence
@@ -63,6 +69,7 @@ These scripts automate the certificate generation and validation process for all
 - CA certificate validity
 
 **Services Verified**:
+
 1. SuperLink
 2. PostgreSQL
 3. Keycloak
@@ -71,6 +78,7 @@ These scripts automate the certificate generation and validation process for all
 6. SuperNode-1 through SuperNode-5 (5 client nodes)
 
 **Exit Codes**:
+
 - `0` - All certificates valid
 - `1` - One or more certificates invalid or missing
 
@@ -83,16 +91,19 @@ These scripts automate the certificate generation and validation process for all
 **Purpose**: Batch generation of all service certificates
 
 **Usage**:
+
 ```bash
 ./generate_all_certs.sh [OPTIONS]
 ```
 
 **Options**:
+
 - `--skip-verification` - Skip certificate verification at the end
 - `--force` - Force regeneration without prompts (auto-answers "yes")
 - `-h, --help` - Show help message
 
 **Examples**:
+
 ```bash
 # Interactive mode - generate all certificates with prompts
 ./generate_all_certs.sh
@@ -107,6 +118,7 @@ These scripts automate the certificate generation and validation process for all
 **Certificate Generation Order**:
 
 **Phase 1: Core Infrastructure Services**
+
 1. SuperLink (FL coordination service) - `172.20.0.10`
 2. PostgreSQL (database backend) - `172.20.0.5`
 3. Keycloak (identity management) - `172.20.0.6`
@@ -121,6 +133,7 @@ These scripts automate the certificate generation and validation process for all
 10. SuperNode-5 (Organization 5) - `172.21.0.14`
 
 **Features**:
+
 - Progress tracking with counters
 - Automatic prerequisite validation
 - Interactive confirmation (unless `--force` is used)
@@ -136,16 +149,19 @@ These scripts automate the certificate generation and validation process for all
 **Purpose**: Comprehensive Phase 1 validation with optional markdown report
 
 **Usage**:
+
 ```bash
 ./validate_phase1.sh [OPTIONS]
 ```
 
 **Options**:
+
 - `--report <filename>` - Generate markdown report (default: `phase1_validation_report.md`)
 - `--no-report` - Don't generate a report file
 - `-h, --help` - Show help message
 
 **Examples**:
+
 ```bash
 # Validate and generate default report
 ./validate_phase1.sh
@@ -160,6 +176,7 @@ These scripts automate the certificate generation and validation process for all
 **Validation Sections**:
 
 #### Section 1.1: Project Structure Setup
+
 - Root directories (ca, config, volumes, docker, scripts, logs)
 - CA subdirectories (pki)
 - Volume directories for all services
@@ -168,6 +185,7 @@ These scripts automate the certificate generation and validation process for all
 - Network definitions (optional check)
 
 #### Section 1.2: Certificate Authority Setup
+
 - easy-rsa installation (system and local)
 - PKI initialization
 - CA variables configuration
@@ -176,6 +194,7 @@ These scripts automate the certificate generation and validation process for all
 - CA certificate distribution to service volumes
 
 #### Section 1.3: Service Certificate Generation
+
 - Certificate generation script existence
 - Certificate verification script existence
 - Individual service certificate validation for all 10 services
@@ -185,10 +204,12 @@ These scripts automate the certificate generation and validation process for all
 - File permission verification
 
 **Exit Codes**:
+
 - `0` - Phase 1 complete and validated
 - `1` - Phase 1 incomplete or validation failed
 
 **Output**:
+
 - Console output with colored status indicators
 - Optional markdown report with comprehensive results
 - Summary statistics (total checks, passed, failed, warnings)
@@ -200,6 +221,7 @@ These scripts automate the certificate generation and validation process for all
 ### Initial Setup
 
 1. **Ensure Prerequisites**:
+
    ```bash
    # Install easy-rsa if not already installed
    sudo apt-get update
@@ -207,6 +229,7 @@ These scripts automate the certificate generation and validation process for all
    ```
 
 2. **Initialize Certificate Authority**:
+
    ```bash
    cd ../ca
    cp -r /usr/share/easy-rsa/* .
@@ -220,12 +243,14 @@ These scripts automate the certificate generation and validation process for all
    ```
 
 3. **Generate All Certificates**:
+
    ```bash
    cd ../scripts
    ./generate_all_certs.sh
    ```
 
 4. **Validate Phase 1**:
+
    ```bash
    ./validate_phase1.sh
    ```
@@ -251,6 +276,7 @@ To verify existing certificates without regeneration:
 ## Network Configuration Reference
 
 ### IP Ranges
+
 - **FL Services Network**: `172.20.0.0/16` - Main services
 - **FL Clients Network**: `172.21.0.0/16` - SuperNode clients
 - **FL Monitoring Network**: `172.22.0.0/16` - Monitoring stack
@@ -258,37 +284,44 @@ To verify existing certificates without regeneration:
 ### Service-Specific SANs
 
 All certificates include:
+
 - Docker service name (e.g., `DNS:superlink`)
 - Full domain name (e.g., `DNS:superlink.fl-lab.local`)
 - Localhost access (for core services)
 - Static IP address(es)
 
 **SuperLink**:
+
 ```
 DNS:superlink,DNS:superlink.fl-lab.local,DNS:localhost,IP:127.0.0.1,IP:172.20.0.10
 ```
 
 **PostgreSQL**:
+
 ```
 DNS:postgres,DNS:postgres.fl-lab.local,DNS:localhost,IP:127.0.0.1,IP:172.20.0.5
 ```
 
 **Keycloak**:
+
 ```
 DNS:keycloak,DNS:keycloak.fl-lab.local,DNS:localhost,IP:127.0.0.1,IP:172.20.0.6
 ```
 
 **JupyterHub**:
+
 ```
 DNS:jupyterhub,DNS:jupyterhub.fl-lab.local,DNS:localhost,IP:127.0.0.1,IP:172.20.0.7
 ```
 
 **Nginx**:
+
 ```
 DNS:nginx,DNS:nginx.fl-lab.local,DNS:localhost,IP:127.0.0.1,IP:172.20.0.4
 ```
 
 **SuperNode-1**:
+
 ```
 DNS:supernode-1,DNS:supernode-1.fl-lab.local,IP:172.21.0.10
 ```
@@ -343,6 +376,7 @@ flower_secure_simulation/
 ### File Permissions
 
 Scripts automatically set correct permissions:
+
 - **Certificates (`.crt`)**: `644` (readable by all, writable by owner)
 - **Private Keys (`.key`)**: `600` (readable/writable by owner only)
 - **CA Private Key**: `600` (NEVER share this file)
@@ -386,6 +420,7 @@ Scripts automatically set correct permissions:
 ### Issue: "CA certificate not found"
 
 **Solution**:
+
 ```bash
 cd ../ca
 ./easyrsa build-ca nopass
@@ -394,6 +429,7 @@ cd ../ca
 ### Issue: "Permission denied" when generating certificates
 
 **Solution**:
+
 ```bash
 # Ensure scripts are executable
 chmod +x *.sh
@@ -413,14 +449,17 @@ The script will prompt to regenerate. Choose "yes" to revoke and regenerate, or 
 
 1. **Expired certificate**: Regenerate using `generate_service_cert.sh`
 2. **Invalid SAN entries**: Check SAN format in certificate using:
+
    ```bash
    openssl x509 -in <cert>.crt -noout -text | grep -A1 "Subject Alternative Name"
    ```
+
 3. **Chain validation failure**: Ensure CA certificate is not expired/corrupted
 
 ### Issue: Scripts can't find easy-rsa
 
 **Solution**:
+
 ```bash
 # Install easy-rsa
 sudo apt-get install easy-rsa
@@ -465,6 +504,7 @@ The scripts include several enhancements beyond the basic requirements:
 ## Support
 
 For issues or questions:
+
 1. Check the troubleshooting section above
 2. Review the implementation plan: `phase1_implementation_plan.md`
 3. Run validation script: `./validate_phase1.sh`

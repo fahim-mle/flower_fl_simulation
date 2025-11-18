@@ -54,4 +54,4 @@ insecure = true  # Remove this line to enable TLS
 
 [tool.flwr.federations.local-deployment]
 address = "127.0.0.1:9093"
-insecure = true
+insecure = false

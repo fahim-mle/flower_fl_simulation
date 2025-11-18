@@ -6,7 +6,7 @@ This directory contains the secure federated learning infrastructure with PKI-ba
 
 ## Directory Layout
 
-```
+```txt
 flower_secure_simulation/
 ├── ca/                                 # Certificate Authority (local PKI)
 │   ├── easyrsa                        # Easy-RSA executable
@@ -127,7 +127,7 @@ flower_secure_simulation/
 
 ### PKI Certificate Hierarchy
 
-```
+```txt
 Root CA (Federated Learning Root CA)
 ├── Server Certificates
 │   ├── superlink.fl-lab.local (FL coordinator)
